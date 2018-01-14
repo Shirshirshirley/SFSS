@@ -8,7 +8,8 @@
         char filename[125];   //filename
         char buf[1024];     //filecontent
     };
-    int pack(struct Filepackage *item,char tCmd,int tFilesize,int tAck, char *uname, char *tFilename,char *tBuf, int count){
+    struct FilePackage pack(char tCmd,int tFilesize,int tAck, char *uname, char *tFilename,char *tBuf, int count){
+        struct FilePackage item;
         item->cmd=tCmd;
         item->filesize=tFilesize;
         item->ack=tAck;
@@ -16,6 +17,11 @@
         item->filename=tFilename;
         memcpy(item->buf,tBuf,count);
         return 0;
+    }
+    struct FilePackage unpack(SSL* ssl, struct FilePackage item){
+
+
+
     }
 
 
