@@ -12,10 +12,12 @@
 #include <netinet/in.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <netdb.h>
 #include <string.h>
 #include <assert.h>
 #define portnumber 2222
+#include<fcntl.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 void InitializeSSL(){
@@ -36,9 +38,13 @@ void InitializeSSL(){
         item.cmd=tCmd;
         item.filesize=tFilesize;
         item.ack=tAck;
+        printf("continue111...\n");
         strcpy(item.usrname,uname);
+        printf("continue222...\n");
         strcpy(item.filename,tFilename);
+        printf("continue333...\n");
         memcpy(item.buf,tBuf,count);
+        printf("continue444...\n");
         return item;
     }
     struct FilePackage pack_init(){
@@ -70,7 +76,8 @@ int main(int argc, char* argv[]){
     struct sockaddr_in servaddr;
     int error;
     int sockfd;
-    struct FilePackage buffer;
+    char buffer[1024];
+    struct FilePackage item;
     int n;
     SSL_CTX *sslctx;
     SSL *cSSL;
@@ -112,11 +119,29 @@ int main(int argc, char* argv[]){
         exit(1);
     }else{
         printf("Connected to server...\n");
-        //write to the server
-        //fputs("Please enter a string: \n",stdout);
-        //fgets(buffer, 1024, stdin);
-        buffer=pack_init();
-        SSL_write(cSSL, &buffer,sizeof(buffer));
+        //upload function
+        printf("Please enter the filename you want to upload: \n");
+        char filename[125];
+        scanf("%s",filename);
+        int fd;
+        fd=open(filename,O_RDONLY);
+        printf("File discretor= %d \n", fd);
+        assert(fd>0);
+        int filesize=lseek(fd,0,SEEK_END);
+        lseek(fd,0,SEEK_SET);
+        printf("File size= %d \n", filesize);
+        int n_read=1;
+        char usrname[]="shirley";
+        while(n_read!=0)
+        {
+            n_read=read(fd,buffer,1024);
+            printf("Content inside buffer is %s, number of word read is %d \n", buffer, n_read);
+            item=pack('U',filesize,0,usrname, filename,buffer, n_read);
+            printf("After packing, the content inside the item is %s", item.buf);
+            SSL_write(cSSL, &item, sizeof(item));
+            printf("continue...\n");
+        }
+        close(fd);
         /*sleep(2);
         printf("wake up for reading operation, ready to read from server...\n");
         memset(buffer,0, sizeof(buffer));

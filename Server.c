@@ -91,14 +91,21 @@ int main(){
         }
         printf("Server is connected...\n");
         //read from client
-        n=SSL_read(cSSL,&buffer,sizeof(struct FilePackage));
+        while(SSL_read(cSSL,&buffer,sizeof(struct FilePackage))){
+            int fd;
+            printf("Start to write, the content is %s \n", buffer.buf);
+            fd=open(buffer.filename,O_WRONLY|O_CREAT,0755);
+            write(fd,buffer.buf,1024);
+
+        }
+        /*n=SSL_read(cSSL,&buffer,sizeof(struct FilePackage));
         if(n==-1){
             perror("Error:");
             exit(1);
         }
         buffer.buf[buffer.filesize]='\0';
-        printf("filesize= %d", buffer.filesize);
-        printf("Server received %s\n", buffer.buf);
+        printf("filesize= %d", buffer.filesize);*/
+        printf("Server received \n");
         //write to client
         /*memset(buffer,0,sizeof(struct FilePackage));
         fputs("Please enter string going to client: \n",stdout);
