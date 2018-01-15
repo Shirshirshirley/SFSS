@@ -31,12 +31,46 @@ void InitializeSSL(){
         char filename[125];   //filename
         char buf[1024];     //filecontent
     };
+    struct FilePackage pack(char tCmd,int tFilesize,int tAck, char *uname, char *tFilename,char *tBuf, int count){
+        struct FilePackage item;
+        item.cmd=tCmd;
+        item.filesize=tFilesize;
+        item.ack=tAck;
+        strcpy(item.usrname,uname);
+        strcpy(item.filename,tFilename);
+        memcpy(item.buf,tBuf,count);
+        return item;
+    }
+    struct FilePackage pack_init(){
+        printf("Please input the content:\n");
+        char buffer[1024];
+        fgets(buffer,1024,stdin);
+        printf("Please input the command: \n");
+        char cmd;
+        scanf("%s",&cmd);
+        printf("Please input the ack:");
+        int ack;
+        scanf("%d",&ack);
+        printf("Please input the usrname: \n");
+        char usrname[50];
+        scanf("%s",usrname);
+        printf("Please input the filename: \n");
+        char Filename[125];
+        scanf("%s",Filename);
+
+        int count;
+        count=strlen(buffer);
+        int filesize=count;
+        struct FilePackage item;
+        item=pack(cmd,filesize,ack,usrname,Filename,buffer,count);
+        return item;
+    }
 
 int main(int argc, char* argv[]){
     struct sockaddr_in servaddr;
     int error;
     int sockfd;
-    char buffer[1024];
+    struct FilePackage buffer;
     int n;
     SSL_CTX *sslctx;
     SSL *cSSL;
@@ -79,15 +113,16 @@ int main(int argc, char* argv[]){
     }else{
         printf("Connected to server...\n");
         //write to the server
-        fputs("Please enter a string: \n",stdout);
-        fgets(buffer, 1024, stdin);
-        SSL_write(cSSL, buffer,strlen(buffer));
-        sleep(2);
+        //fputs("Please enter a string: \n",stdout);
+        //fgets(buffer, 1024, stdin);
+        buffer=pack_init();
+        SSL_write(cSSL, &buffer,sizeof(buffer));
+        /*sleep(2);
         printf("wake up for reading operation, ready to read from server...\n");
         memset(buffer,0, sizeof(buffer));
         n=SSL_read(cSSL, buffer, 1024);
         buffer[n]='\0';
-        printf("Content read from server: %s", buffer);
+        printf("Content read from server: %s", buffer);*/
         SSL_free(cSSL);
         close(sockfd);
         SSL_CTX_free(sslctx);

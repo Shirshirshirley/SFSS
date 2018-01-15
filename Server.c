@@ -29,15 +29,15 @@ void InitializeSSL(){
         char buf[1024];     //filecontent
     };
 int main(){
-//create a socket, returns a non-negative socket descriptor
-//int socket(int family, int type, int protocol);
+
     int sockfd, new_fd,n, error;
-    char buffer[1024];
+    struct FilePackage buffer;
     struct sockaddr_in servaddr;
     struct sockaddr_in clieaddr;
+    char read_buf[1024];
     SSL_CTX *sslctx;
     SSL *cSSL;
-
+    //creat oepnssl config and load cert and rsa
     InitializeSSL();
     sslctx=SSL_CTX_new(SSLv23_server_method());
     //SSL_CTX_set_options(sslctx,SSL_OP_SINGLE_DH_USE);
@@ -91,15 +91,16 @@ int main(){
         }
         printf("Server is connected...\n");
         //read from client
-        n=SSL_read(cSSL,buffer,1024);//if n is inside a parentness, if will not be given the value.
+        n=SSL_read(cSSL,&buffer,sizeof(struct FilePackage));
         if(n==-1){
             perror("Error:");
             exit(1);
         }
-        buffer[n]='\0';
-        printf("Server received %s\n", buffer);
+        buffer.buf[buffer.filesize]='\0';
+        printf("filesize= %d", buffer.filesize);
+        printf("Server received %s\n", buffer.buf);
         //write to client
-        memset(buffer,0,sizeof(buffer));
+        /*memset(buffer,0,sizeof(struct FilePackage));
         fputs("Please enter string going to client: \n",stdout);
         fgets(buffer,1024,stdin);
         n=SSL_write(cSSL,buffer,1024);
@@ -107,7 +108,7 @@ int main(){
             perror("Error\n");
             exit(1);
         }
-
+        */
         SSL_shutdown(cSSL);
         SSL_free(cSSL);
         close(new_fd);
