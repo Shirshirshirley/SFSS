@@ -20,57 +20,46 @@
 #include<fcntl.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+#include "upload.h"
+#include "download_client.h"
 void InitializeSSL(){
     SSL_load_error_strings();
     SSL_library_init();
     OpenSSL_add_all_algorithms();
 }
-    typedef struct FilePackage{
-        char cmd;   //operation /command
-        int filesize;
-        int ack;     //flag
-        char usrname[50];    //clientname
-        char filename[125];   //filename
-        char buf[1024];     //filecontent
-    };
-    struct FilePackage pack(char tCmd,int tFilesize,int tAck, char *uname, char *tFilename,char *tBuf, int count){
-        struct FilePackage item;
-        item.cmd=tCmd;
-        item.filesize=tFilesize;
-        item.ack=tAck;
-        printf("continue111...\n");
-        strcpy(item.usrname,uname);
-        printf("continue222...\n");
-        strcpy(item.filename,tFilename);
-        printf("continue333...\n");
-        memcpy(item.buf,tBuf,count);
-        printf("continue444...\n");
-        return item;
-    }
-    struct FilePackage pack_init(){
-        printf("Please input the content:\n");
-        char buffer[1024];
-        fgets(buffer,1024,stdin);
-        printf("Please input the command: \n");
-        char cmd;
-        scanf("%s",&cmd);
-        printf("Please input the ack:");
-        int ack;
-        scanf("%d",&ack);
-        printf("Please input the usrname: \n");
-        char usrname[50];
-        scanf("%s",usrname);
-        printf("Please input the filename: \n");
-        char Filename[125];
-        scanf("%s",Filename);
+typedef struct FilePackage{
+    char cmd;   //operation /command
+    int filesize;
+    int ack;     //flag
+    char usrname[50];    //clientname
+    char filename[125];   //filename
+    char buf[1024];     //filecontent
+};
 
-        int count;
-        count=strlen(buffer);
-        int filesize=count;
-        struct FilePackage item;
-        item=pack(cmd,filesize,ack,usrname,Filename,buffer,count);
-        return item;
-    }
+struct FilePackage pack_init(){
+    printf("Please input the content:\n");
+    char buffer[1024];
+    fgets(buffer,1024,stdin);
+    printf("Please input the command: \n");
+    char cmd;
+    scanf("%s",&cmd);
+    printf("Please input the ack:");
+    int ack;
+    scanf("%d",&ack);
+    printf("Please input the usrname: \n");
+    char usrname[50];
+    scanf("%s",usrname);
+    printf("Please input the filename: \n");
+    char Filename[125];
+    scanf("%s",Filename);
+
+    int count;
+    count=strlen(buffer);
+    int filesize=count;
+    struct FilePackage item;
+    item=pack(cmd,filesize,ack,usrname,Filename,buffer,count);
+    return item;
+}
 
 int main(int argc, char* argv[]){
     struct sockaddr_in servaddr;
@@ -120,38 +109,46 @@ int main(int argc, char* argv[]){
     }else{
         printf("Connected to server...\n");
         //upload function
-        printf("Please enter the filename you want to upload: \n");
-        char filename[125];
-        scanf("%s",filename);
-        int fd;
-        fd=open(filename,O_RDONLY);
-        printf("File discretor= %d \n", fd);
-        assert(fd>0);
-        int filesize=lseek(fd,0,SEEK_END);
-        lseek(fd,0,SEEK_SET);
-        printf("File size= %d \n", filesize);
-        int n_read=1;
-        char usrname[]="shirley";
-        while(n_read!=0)
-        {
-            n_read=read(fd,buffer,1024);
-            printf("Content inside buffer is %s, number of word read is %d \n", buffer, n_read);
-            item=pack('U',filesize,0,usrname, filename,buffer, n_read);
-            printf("After packing, the content inside the item is %s", item.buf);
-            SSL_write(cSSL, &item, sizeof(item));
-            printf("continue...\n");
-        }
-        close(fd);
-        /*sleep(2);
-        printf("wake up for reading operation, ready to read from server...\n");
-        memset(buffer,0, sizeof(buffer));
-        n=SSL_read(cSSL, buffer, 1024);
-        buffer[n]='\0';
-        printf("Content read from server: %s", buffer);*/
-        SSL_free(cSSL);
-        close(sockfd);
-        SSL_CTX_free(sslctx);
-        exit(0);
+    char usrname[]="Shirley";
+    printf("Please enter the command \n");
+    char cmd;
+    scanf("%c", &cmd);
+    switch(cmd){
+        char upload_filename[125];
+        char download_filename[125];
+        case 'U':
+            printf("Please enter the file you want to upload: \n");
+            scanf("%s", upload_filename);
+            int upload_filesize;
+            upload_filesize=file_size(upload_filename);
+            if(request_upload_file(cSSL,upload_filename,usrname,upload_filesize)!=0) break;
+            if(check_request(cSSL)!=0) break;
+            upload_file(cSSL, upload_filename,upload_filesize,usrname);
+            check_response(cSSL);
+            break;
+    /*    case 'D':
+            printf("Please enter the file you want to download: \n");
+            scanf("%s", download_filename);
+            printf("Continue...\n");
+            download_request(cSSL, usrname, download_filename);
+            printf("Continue...\n");
+            downloaded(cSSL, usrname, download_filename);
+            printf("Continue...\n");
+            break;*/
+
+    }
+        //download function
+        //cSSL=SSL_new(sslctx);
+        //SSL_set_fd(cSSL, sockfd);
+    /*printf("start to download...\n");
+    memset(&item, 0, sizeof(item));
+    SSL_read(cSSL, &item,sizeof(item));
+    printf("Data received : %s \n", item.buf);*/
+    SSL_shutdown(cSSL);
+    SSL_free(cSSL);
+    close(sockfd);
+    SSL_CTX_free(sslctx);
+    exit(0);
     }
 }
 
