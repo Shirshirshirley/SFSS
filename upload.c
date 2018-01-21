@@ -94,10 +94,7 @@ int upload_file(SSL *cSSL, char *filename,int filesize,char *usrname){
 
     while(n>0){
         int j;
-        printf("buffer length= %d\n", (int)strlen(buffer));
         item=pack('U',filesize,2,usrname,filename, buffer, strlen(buffer));
-        printf("Size of buffer %d\n", (int)sizeof(item));
-        printf("item.buff length= %d\n", (int)strlen(item.buf));
         j=SSL_write(cSSL, &item, sizeof(item));
         if(j<=0){
             perror("Failed to upload!\n");

@@ -36,6 +36,7 @@ int download_request(SSL *cSSL, char *usrname, char *filename){
     item=pack('D',0, 9,usrname, filename, NULL, 0);
     printf("Filename= %s\n", filename);
     err=SSL_write(cSSL,&item, sizeof(item));
+    printf("[Debug:] ack= %d \n", item.ack);
     printf("error =%d \n", err);
     if(err<=0){
         perror("Failed to send download request \n");
@@ -64,9 +65,19 @@ int downloading(SSL *cSSL){
         perror("Downloading: failed to open/ create file \n");
         return -1;
     }
+    printf("[Debug:] ack= %d \n", ack);
+    printf("Server confirmed, prepared to download, filesize= %d..\n", buffer.filesize);
+    n_byte=SSL_read(cSSL, &buffer, sizeof(buffer));
+        if(n_byte<=0){
+        perror("Downloading: failed to read from server \n");
+        return -1;
+    }
+    ack=buffer.ack;
+    printf("Number of words read: %d\n", n_byte);
+    printf("[Debug:] ack= %d \n", ack);
     while(n_byte>0 && ack==2){
         int n_write;
-        n_write=write(fd,buffer.buf, 1024);
+        n_write=write(fd,buffer.buf, (int)strlen(buffer.buf));
         printf("Number of words write: %d\n", n_write);
         if(n_write<0){
             perror("Downloading: failed to write to file \n");

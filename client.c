@@ -113,9 +113,9 @@ int main(int argc, char* argv[]){
     printf("Please enter the command \n");
     char cmd;
     scanf("%c", &cmd);
+    char upload_filename[125];
+    char download_filename[125];
     switch(cmd){
-        char upload_filename[125];
-        char download_filename[125];
         case 'U':
             printf("Please enter the file you want to upload: \n");
             scanf("%s", upload_filename);
@@ -129,7 +129,6 @@ int main(int argc, char* argv[]){
         case 'D':
             printf("Please enter the file you want to download: \n");
             scanf("%s", download_filename);
-            printf("Continue...\n");
             download_request(cSSL, usrname, download_filename);
             printf("Continue...\n");
             downloading(cSSL);
