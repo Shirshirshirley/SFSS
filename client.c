@@ -22,6 +22,8 @@
 #include <openssl/err.h>
 #include "upload.h"
 #include "download_client.h"
+#include "filebrowse_client.h"
+
 void InitializeSSL(){
     SSL_load_error_strings();
     SSL_library_init();
@@ -84,31 +86,25 @@ int main(int argc, char* argv[]){
 //get the hostname by calling hostname
     struct hostent *host;
     host=gethostbyname(argv[1]);
-    printf("continue...\n");
 //fulfill sock infromation of the client
     bzero(&servaddr, sizeof(struct sockaddr_in));
     servaddr.sin_family=AF_INET;
     servaddr.sin_port=htons(portnumber);
     servaddr.sin_addr=*((struct in_addr*)host->h_addr);
-    printf("continue...\n");
-
 //In TCP connect initiates a three-way handshake. connect returns only thwn the connection is established or when an error occurs.
     int flag;
     flag=connect(sockfd,(struct sockaddr*)(&servaddr), sizeof(struct sockaddr));
-
     cSSL=SSL_new(sslctx);
     SSL_set_fd(cSSL, sockfd);
     if(SSL_connect(cSSL)==-1)
         perror("Error ");
     //get the remore certificate into the x509 structure
     SSL_get_peer_certificate(cSSL);
-
     if(flag==-1){
         perror("Error: ");
         exit(1);
     }else{
         printf("Connected to server...\n");
-        //upload function
     char usrname[]="Shirley";
     printf("Please enter the command \n");
     char cmd;
@@ -130,21 +126,16 @@ int main(int argc, char* argv[]){
             printf("Please enter the file you want to download: \n");
             scanf("%s", download_filename);
             download_request(cSSL, usrname, download_filename);
-            printf("Continue...\n");
             downloading(cSSL);
-            printf("Continue...\n");
             downloaded(cSSL, usrname, download_filename);
-            printf("Continue...\n");
             break;
-
+        case 'S':
+            send_request_display(cSSL, usrname);
+            printf("_____Display file list_____\n");
+            display_filename(cSSL);
+            printf("_____Display filelist done_____\n");
+            break;
     }
-        //download function
-        //cSSL=SSL_new(sslctx);
-        //SSL_set_fd(cSSL, sockfd);
-    /*printf("start to download...\n");
-    memset(&item, 0, sizeof(item));
-    SSL_read(cSSL, &item,sizeof(item));
-    printf("Data received : %s \n", item.buf);*/
     SSL_shutdown(cSSL);
     SSL_free(cSSL);
     close(sockfd);

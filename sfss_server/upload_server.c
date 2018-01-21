@@ -32,7 +32,12 @@ struct FilePackage pack(char tCmd,int tFilesize,int tAck, char *uname, char *tFi
     item.filesize=tFilesize;
     item.ack=tAck;
     strcpy(item.usrname,uname);
+    if(tFilename==NULL){
+        item.filename[0]='\0';
+    }
+    else{
     strcpy(item.filename,tFilename);
+    }
     memcpy(item.buf,tBuf,count);
     return item;
 };

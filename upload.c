@@ -37,13 +37,17 @@ struct FilePackage pack(char tCmd,int tFilesize,int tAck, char *uname, char *tFi
     item.filesize=tFilesize;
     item.ack=tAck;
     strcpy(item.usrname,uname);
+    if(tFilename==NULL){
+        item.filename[0]='\0';
+    }
+    else{
     strcpy(item.filename,tFilename);
-    printf("count is %d\n", count);
+    }
     //if(tBuf != NULL)
     if(tBuf != NULL){
         memcpy(item.buf, tBuf, min(count + 1, 1024));
-        printf("[DEBUG][upload.c 37] strlen tBuf is %d\n", (int)strlen(tBuf));
-        printf("[DEBUG][upload.c 38] strlen item.buf is %d\n", (int)strlen(item.buf));
+       // printf("[DEBUG][upload.c 37] strlen tBuf is %d\n", (int)strlen(tBuf));
+        //printf("[DEBUG][upload.c 38] strlen item.buf is %d\n", (int)strlen(item.buf));
     }
 
     return item;
