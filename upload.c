@@ -24,6 +24,13 @@ typedef struct FilePackage{
     char filename[125];   //filename
     char buf[1024];     //filecontent
 };
+
+int min(int a, int b){
+    if (a > b)
+        return b;
+    else
+        return a;
+}
 struct FilePackage pack(char tCmd,int tFilesize,int tAck, char *uname, char *tFilename,char *tBuf, int count){
     struct FilePackage item;
     item.cmd=tCmd;
@@ -31,12 +38,20 @@ struct FilePackage pack(char tCmd,int tFilesize,int tAck, char *uname, char *tFi
     item.ack=tAck;
     strcpy(item.usrname,uname);
     strcpy(item.filename,tFilename);
-    memcpy(item.buf, tBuf, count);
+    printf("count is %d\n", count);
+    //if(tBuf != NULL)
+    if(tBuf != NULL){
+        memcpy(item.buf, tBuf, min(count + 1, 1024));
+        printf("[DEBUG][upload.c 37] strlen tBuf is %d\n", (int)strlen(tBuf));
+        printf("[DEBUG][upload.c 38] strlen item.buf is %d\n", (int)strlen(item.buf));
+    }
+
     return item;
 };
 int request_upload_file(SSL* cSSL,char *filename,char *usrname,int filesize){
     struct FilePackage packed_data;
     packed_data=pack('U',filesize,9,usrname,filename,NULL,0);
+    printf("[DEBUG]File size is %d packet_data.fileszie is %d\n", filesize, packed_data.filesize);
     if(SSL_write(cSSL,&packed_data,sizeof(packed_data))==-1){
         perror("Failed to send request: \n");
         return -1;
@@ -74,18 +89,22 @@ int upload_file(SSL *cSSL, char *filename,int filesize,char *usrname){
     char buffer[1024];
     struct FilePackage item;
     int fd=open(filename,O_RDONLY);
-    memset(buffer,0,sizeof(buffer));
-    int n=read(fd,buffer,1024);
+    memset(buffer,'\0',sizeof(buffer));
+    int n=read(fd, buffer, 1023);
+
     while(n>0){
         int j;
-        item=pack('U',filesize,2,usrname,filename,buffer, strlen(buffer));
+        printf("buffer length= %d\n", (int)strlen(buffer));
+        item=pack('U',filesize,2,usrname,filename, buffer, strlen(buffer));
+        printf("Size of buffer %d\n", (int)sizeof(item));
+        printf("item.buff length= %d\n", (int)strlen(item.buf));
         j=SSL_write(cSSL, &item, sizeof(item));
         if(j<=0){
             perror("Failed to upload!\n");
             return -1;
         }
-        memset(buffer,0,sizeof(buffer));
-        n=read(fd, buffer,1024);
+        memset(buffer,'\0',sizeof(buffer));
+        n=read(fd, buffer,1023);
     }
     close(fd);
     item=pack('U',0,4,usrname,filename,NULL,0);

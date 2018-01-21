@@ -126,15 +126,17 @@ int main(int argc, char* argv[]){
             upload_file(cSSL, upload_filename,upload_filesize,usrname);
             check_response(cSSL);
             break;
-    /*    case 'D':
+        case 'D':
             printf("Please enter the file you want to download: \n");
             scanf("%s", download_filename);
             printf("Continue...\n");
             download_request(cSSL, usrname, download_filename);
             printf("Continue...\n");
+            downloading(cSSL);
+            printf("Continue...\n");
             downloaded(cSSL, usrname, download_filename);
             printf("Continue...\n");
-            break;*/
+            break;
 
     }
         //download function

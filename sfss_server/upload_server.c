@@ -10,6 +10,7 @@
 #include <unistd.h>
 #define portnumber 2222
 #include <assert.h>
+#include <sys/statvfs.h>
 //the following libraries are used for opensslencry
 #include<fcntl.h>
 #include <openssl/ssl.h>
@@ -35,14 +36,33 @@ struct FilePackage pack(char tCmd,int tFilesize,int tAck, char *uname, char *tFi
     memcpy(item.buf,tBuf,count);
     return item;
 };
+
+long GetAvailableSpace(const char* path)
+{
+  struct statvfs stat;
+
+  if (statvfs(path, &stat) != 0) {
+    // error happens, just quits here
+    return -1;
+  }
+
+  // the available size is f_bsize * f_bavail
+  return stat.f_bsize * stat.f_bavail;
+}
+
 int check_freespace(int filesize){
     struct statfs stat;
-    statfs("./", &stat);
+    //statfs("./", &stat);
     /*size=(stat.f_bavail)*(stat.f_bsize);
     printf("The freespace inside this disk is %lu", size);
     freespace=(int) size;
     printf("The freespace inside this disk is %d", freespace);*/
-    if((stat.f_bavail)*(stat.f_bsize)<filesize){
+    printf("Hello\n");
+    long size = GetAvailableSpace("./");
+    printf("The freespace inside this disk is %lu\n", size);
+    printf("File size is %d\n", filesize);
+    //printf("File size is %d Disk space is %l\n", filesize, (long)(stat.f_bavail)*(stat.f_bsize));
+    if(size<filesize){
         perror("No enough free space \n");
         return -1;
     }
@@ -78,33 +98,6 @@ int check_client_read(SSL *cSSL){
     return -1;
 }
 
-int uploading2(SSL *cSSL){
-    struct FilePackage buffer;
-    int error=SSL_read(cSSL, &buffer, sizeof(buffer));
-    int ack=buffer.ack;
-    printf("ack= %d", ack);
-    int fd=open(buffer.filename, O_WRONLY|O_CREAT, 0755);
-    if(fd<=0){
-        perror("File open error\n");
-        return -1;
-    }
-    while(error>0 && ack==2){
-        int n_byte=write(fd, buffer.buf, strlen(buffer.buf));
-        if(n_byte<0){
-            perror("Socket reading error \n");
-            return -1;
-        }
-        error=SSL_read(cSSL, &buffer, sizeof(buffer));
-        ack=buffer.ack;
-    }
-    if(error<=0){
-        perror("Uploading error \n");
-        return -1;
-    }
-    close(fd);
-    return 0;
-}
-
 
 int uploading(SSL *cSSL){
     struct FilePackage buffer;
@@ -115,8 +108,10 @@ int uploading(SSL *cSSL){
         perror("File open error\n");
         return -1;
     }
+    printf("Size of buffer %d\n", (int)sizeof(buffer));
     while(error>0 && ack==2){
-        int n_byte=write(fd, buffer.buf, 1024);
+        printf("length= %d\n", (int)strlen(buffer.buf));
+        int n_byte=write(fd, buffer.buf, strlen(buffer.buf));
         if(n_byte<0){
             perror("Socket reading error \n");
             return -1;
