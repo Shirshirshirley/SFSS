@@ -23,6 +23,7 @@
 #include "upload.h"
 #include "download_client.h"
 #include "filebrowse_client.h"
+#include "login_client.h"
 
 void InitializeSSL(){
     SSL_load_error_strings();
@@ -105,36 +106,56 @@ int main(int argc, char* argv[]){
         exit(1);
     }else{
         printf("Connected to server...\n");
-    char usrname[]="Shirley";
-    printf("Please enter the command \n");
-    char cmd;
-    scanf("%c", &cmd);
-    char upload_filename[125];
-    char download_filename[125];
-    switch(cmd){
-        case 'U':
-            printf("Please enter the file you want to upload: \n");
-            scanf("%s", upload_filename);
-            int upload_filesize;
-            upload_filesize=file_size(upload_filename);
-            if(request_upload_file(cSSL,upload_filename,usrname,upload_filesize)!=0) break;
-            if(check_request(cSSL)!=0) break;
-            upload_file(cSSL, upload_filename,upload_filesize,usrname);
-            check_response(cSSL);
-            break;
-        case 'D':
-            printf("Please enter the file you want to download: \n");
-            scanf("%s", download_filename);
-            download_request(cSSL, usrname, download_filename);
-            downloading(cSSL);
-            downloaded(cSSL, usrname, download_filename);
-            break;
-        case 'S':
-            send_request_display(cSSL, usrname);
-            printf("_____Display file list_____\n");
-            display_filename(cSSL);
-            printf("_____Display filelist done_____\n");
-            break;
+    //login authentication
+    int login=0;
+    while(login==0){
+        flag=send_login_request(cSSL);
+        if(flag!=0){
+            printf("Login error.\n");
+        }
+        flag=login_request_reply(cSSL);
+        if(flag!=0){
+            printf("Unauthenticated usr.\n");
+        }
+        if(flag==0){
+            login=1;
+        }
+    }
+
+    while(1){
+        char usrname[]="Shirley";
+        char cmd;
+        printf("[Debug:line111]Please enter the command:\n");
+        //scanf("%c\n", &cmd);
+        cmd=getchar();
+        getchar();
+        char upload_filename[125];
+        char download_filename[125];
+        switch(cmd){
+            case 'U':
+                printf("Please enter the file you want to upload: \n");
+                scanf("%s", upload_filename);
+                int upload_filesize;
+                upload_filesize=file_size(upload_filename);
+                if(request_upload_file(cSSL,upload_filename,usrname,upload_filesize)!=0) break;
+                if(check_request(cSSL)!=0) break;
+                upload_file(cSSL, upload_filename,upload_filesize,usrname);
+                check_response(cSSL);
+                break;
+            case 'D':
+                printf("Please enter the file you want to download: \n");
+                scanf("%s", download_filename);
+                download_request(cSSL, usrname, download_filename);
+                downloading(cSSL);
+                downloaded(cSSL, usrname, download_filename);
+                break;
+            case 'S':
+                send_request_display(cSSL, usrname);
+                printf("_____Display file list_____\n");
+                display_filename(cSSL);
+                printf("_____Display filelist done_____\n");
+                break;
+        }
     }
     SSL_shutdown(cSSL);
     SSL_free(cSSL);
