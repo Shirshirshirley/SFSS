@@ -30,6 +30,7 @@ void InitializeSSL(){
     SSL_library_init();
     OpenSSL_add_all_algorithms();
 }
+
 typedef struct FilePackage{
     char cmd;   //operation /command
     int filesize;

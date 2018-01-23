@@ -43,6 +43,7 @@ int send_login_request(SSL *cSSL){
     count=strlen(password);
     item=pack('L',0,9,usrname,NULL,password,count);
     err=SSL_write(cSSL, &item, sizeof(item));
+    printf("[Debug] usrname is %s and password is %s.\n", item.usrname, item.buf);
     if(err<=0){
         printf("Failed to send login in request.\n");
         return -1;
