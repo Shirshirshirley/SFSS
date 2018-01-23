@@ -1,0 +1,14 @@
+ gcc  -o client upload.c download_client.c client.c -lssl -lcrypto
+ gcc  -o server upload_server.c download_server.c Server.c -lssl -lcrypto
+
+
+gcc  -o client upload.c download_client.c filebrowse_client.c client.c -lssl -lcrypto
+gcc  -o server upload_server.c download_server.c filebrowse_server.c Server.c -lssl -lcrypto
+
+
+git add client.c download_client.c download_client.h upload.c upload.h sfss_server/download_server.c sfss_server/upload_server.h sfss_server/download_server.h sfss_server/upload_server.c sfss_server/download_server.c filebrowse_client.c filebrowse_client.h sfss_server/filebrowse_server.c sfss_server/filebrowse_server.h
+
+
+
+gcc  -o client upload.c download_client.c filebrowse_client.c login_client.c client.c -lssl -lcrypto -lsqlite3
+gcc  -o server upload_server.c download_server.c filebrowse_server.c login_server.c Server.c -lssl -lcrypto -lsqlite3
