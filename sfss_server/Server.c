@@ -18,6 +18,7 @@
 #include <openssl/err.h>
 #include "upload_server.h"
 #include "download_server.h"
+#include "login_server.h"
 void InitializeSSL(){
     SSL_library_init();
     OpenSSL_add_all_algorithms();
@@ -106,6 +107,10 @@ int main(){
         }
         printf("Server is connected...\n");
         //check user command
+        int login=-1;
+        while(login==-1){
+            login=receive_login_request(cSSL);
+        }
         SSL_read(cSSL, &buffer, sizeof(buffer));
         char cmd;
         char usrname[50];
